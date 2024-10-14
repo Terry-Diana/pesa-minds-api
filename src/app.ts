@@ -1,17 +1,15 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
-import cors from "cors"; // Import cors
+import cors from "cors"; 
 import authRoutes from "./routes/authRoutes";
-import rateLimit from "express-rate-limit";
+import budgetRoutes from './routes/budgetRoutes';
+import expenseRoutes from './routes/expenseRoutes';
+import incomeRoutes from './routes/incomeRoutes';
+import tipsRoutes from './routes/tipsRoutes';
+import { errorHandler } from './utils/errorHandler';
 import recaptchaRoutes from './routes/recaptcha';
 
 dotenv.config();
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: "Too many requests from this IP, please try again after 15 minutes.",
-});
 
 const app = express();
 
@@ -24,8 +22,12 @@ app.use(cors({
 
 app.use(express.json());
 
-app.use("/auth", authRoutes);
-app.use('/api/', apiLimiter);
+app.use('/api/auth', authRoutes);
+app.use('/api/budgets', budgetRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/income', incomeRoutes);
+app.use('/api/tips', tipsRoutes);
+app.use(errorHandler);
 app.use('/api/recaptcha', recaptchaRoutes);
 
 app.get("/", (req: Request, res: Response) => {
@@ -34,8 +36,12 @@ app.get("/", (req: Request, res: Response) => {
 
 const port = process.env.PORT || 3001;
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+
 
 export default app;
