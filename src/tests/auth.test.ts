@@ -1,28 +1,37 @@
-import request from 'supertest';
-import app from '../app';
+import request from "supertest";
+import app from "../app";
+import { mockCaptcha } from "./mocks/mockCaptcha";
 
-describe('Authentication API', () => {
-  it('should register a new user', async () => {
+describe("Authentication API", () => {
+  beforeAll(() => {
+    // Override the app's CAPTCHA middleware for testing
+    app.use("/api/auth/signup", mockCaptcha);
+    app.use("/api/auth/login", mockCaptcha);
+  });
+
+  it("should register a new user", async () => {
     const response = await request(app)
-      .post('/api/auth/signup')
+      .post("/api/auth/signup")
       .send({
-        email: 'sovasas187@rowplant.com',
-        password: 'PasswordPassword123',
+        email: "testuser@example.com",
+        password: "PasswordPassword123",
+        answer: "mockAnswer",
+        hash: "mockHash",
       });
     expect(response.status).toBe(201);
-    expect(response.body).toHaveProperty('user');
+    expect(response.body).toHaveProperty("user");
   });
 
-  it('should login a user', async () => {
+  it("should login a user", async () => {
     const response = await request(app)
-      .post('/api/auth/login')
+      .post("/api/auth/login")
       .send({
-        email: 'test@example.com',
-        password: 'Password123',
+        email: "testuser@example.com",
+        password: "PasswordPassword123",
+        answer: "mockAnswer",
+        hash: "mockHash",
       });
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('token');
+    expect(response.body).toHaveProperty("token");
   });
-  
-  // Add more tests for password recovery, check session, etc.
 });

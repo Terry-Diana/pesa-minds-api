@@ -1,20 +1,29 @@
-import { Request, Response, NextFunction } from "express";
-import { generatecaptchaChallenge, verifycaptcha } from '../config/captcha';
+// src/middlewares/captchaMiddleware.ts
 
-export const captchaMiddleware = async (
+import { Request, Response, NextFunction } from "express";
+import crypto from "crypto";
+
+export const captchaMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const captchaToken = req.body.captchaToken;
-  if (!captchaToken) {
+  const { answer, hash } = req.body;
+
+  if (!answer || !hash) {
     return res.status(400).json({ message: "CAPTCHA is required" });
   }
 
-  const isCaptchaValid = await verifycaptcha(req, res);
-  if (!isCaptchaValid) {
-    return res.status(400).json({ message: "Invalid CAPTCHA" });
+  const answerHash = crypto
+    .createHash("sha256")
+    .update(answer.toString())
+    .digest("hex");
+
+  if (answerHash === hash) {
+    // CAPTCHA verification succeeded, proceed to the next middleware
+    return next();
   }
 
-  next();
+  // CAPTCHA verification failed, send a 400 response
+  return res.status(400).json({ message: "CAPTCHA verification failed" });
 };
